@@ -45,6 +45,13 @@ CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
 USE_FAISS = os.getenv("USE_FAISS", "false").lower() == "true"
 VECTOR_DIMENSION = int(os.getenv("VECTOR_DIMENSION", "384"))
 
+# Validate embedding model availability
+if EMBEDDING_MODEL != "mock":
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ImportError:
+        EMBEDDING_MODEL = "mock"
+
 
 # Global instances
 vectorizer: Optional[DocumentVectorizer] = None
