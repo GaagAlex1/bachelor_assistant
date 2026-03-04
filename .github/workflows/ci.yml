@@ -9,35 +9,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Free disk space
-        run: |
-          sudo docker image prune -a -f
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image (lite for CI)
+      - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile.ci
           push: false
           tags: document-processor:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      - name: Test container starts
+      - name: Health check
         run: |
-          docker run --rm -d --name test-container document-processor:${{ github.sha }}
-          sleep 5
-          docker logs test-container
-          docker stop test-container
+          docker run --rm document-processor:${{ github.sha }} \
+            python -c "from api.main import app; print('OK')"
